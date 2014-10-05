@@ -1,25 +1,17 @@
-boblight-client
-===============
+boblib
+=
+Please see the Wiki-Page for a documentation of public methods and their attributes.
 
-This code is for my project to control the lights connected to a Raspberry Pi running boblightd with an IR remote control.
+# Short description of how to use it
+* instantiate: `bob = Boblight("127.0.0.1", 19333)`
+* set colors of all lights (i.e.: yellow): `bob.setColor(1, 1, 0)`
+* set priority: `bob.setPriority(128)`
+* set speed of all lights: `bob.setSpeed(0.5)`
+* set interpolation of all lights: `bob.setInterpolation(True)`
+* set color of a specific light (i.e.: 12 to red): `bob.getLight()[13].getColor().setColor(1, 0, 0)`
+* set speed of a specific light (i.e.: 12): `bob.getLight()[13].setSpeed(1)`
+* set interpolation of a specific light (i.e.: 12): `bob.getLight()[13].setInterpolation(False)`
 
-It gives the possibility to switch the power supply of my LED stripe on and off using a hardware button I connected to a GPIO, or even by pushing the on/off button on my old Pinnacle remote control I had lying around.
+In one of my projects I needed to store information about "who" set a light. Let's say the user sets a few lights to specific colors and the software calculates the colors of all other lights to get a color gradient.
 
-If either the button in hardware or remote control is pushed, the code switches a relais which is connected to another GPIO.
-
-For the time being I added code for the buttons 1 to 6 on my remote control. Each of them with another color:
-	1: red
-	2: green
-	3: blue
-	4: yellow
-	5: violet
-	6: cyan
-
-
-How to use
-----------
-
-1. Install lirc, python-lirc, python-rpi.gpio
-2. You need to get your IR remote running using lirc. See my configuration "lirc.conf" in ./config to get some inspiration.
-3. It is necessary that lirc passes commands to this python script. Therefore it is necessary to have a mapping file named "lircrc" which you can find in ./config as well.
-4. Add buttons to your Raspberry Pi if you want to use the complete code
+* set setManually of a specific light (i.e.: 12): `bob.getLight()[13].setSetManually(True)`
