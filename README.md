@@ -3,7 +3,7 @@ boblib
 Please see the Wiki-Page for a documentation of public methods and their attributes.
 
 # Short description of how to use it
-This is a short HowTo you need to get it running.
+This is a short HowTo you may need to get it running.
 
 * import the library: `import boblib`
 * instantiate: `bob = boblib.Boblight("127.0.0.1", 19333)`
