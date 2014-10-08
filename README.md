@@ -7,7 +7,7 @@ This is a short HowTo you may need to get it running.
 
 * import the library: `import boblib`
 * instantiate: `bob = boblib.Boblight("127.0.0.1", 19333)`
-* set colors of all lights (i.e.: yellow): `bob.setColor(1, 1, 0)`
+* set color of all lights (i.e.: yellow): `bob.setColor(1, 1, 0)`
 * set priority: `bob.setPriority(128)`
 * set speed of all lights: `bob.setSpeed(0.5)`
 * set interpolation of all lights: `bob.setInterpolation(True)`
