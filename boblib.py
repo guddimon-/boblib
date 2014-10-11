@@ -99,6 +99,10 @@ class Boblight:
     _EOL        = "\n"
     _SPLITTER   = " "
     
+    # attributes for server connection
+    _host = None
+    _port = None
+    
     # attributes where our data is stored into
     _tn         = None
     _light      = []
@@ -115,6 +119,8 @@ class Boblight:
         if self._tn:
             raise Boblight.ConnectionError("Already Connected!")
         else:
+            self._host = host
+            self._port = port
             self._tn = Telnet(host, port)
             
             self._tn.write(self._HELLO)
@@ -190,7 +196,7 @@ class Boblight:
         self._tn.write(self._SYNC)
         
     def getLightsCount(self):
-        return self._light.__sizeof__()
+        return self._light.__len__()
     
     def getLight(self):
         return self._light
@@ -203,3 +209,12 @@ class Boblight:
             return True
         else:
             return False
+
+    def getHost(self):
+        return self._host
+    
+    def getPort(self):
+        return self._port
+
+    def getPriority(self):
+        return self._priority
