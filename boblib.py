@@ -108,6 +108,7 @@ class Boblight:
     _tn         = None
     _light      = []
     _priority   = int(254)
+    _brightness = 1
     
     def __init__(self, host="", port=19333, priority=255):
         if host != "":
@@ -157,7 +158,7 @@ class Boblight:
     
     def _sendColor(self):
         for l in self._light:
-            self._tn.write(self._SETLIGHTRGB.format(l.getName(), l.getColor().getRed(), l.getColor().getGreen(), l.getColor().getBlue()))
+            self._tn.write(self._SETLIGHTRGB.format(l.getName(), self._brightness * l.getColor().getRed(), self._brightness * l.getColor().getGreen(), self._brightness * l.getColor().getBlue()))
             
         self.sync()
         
@@ -225,3 +226,17 @@ class Boblight:
 
     def getPriority(self):
         return self._priority
+
+    def setBrightness(self, brightness):
+        self._brightness = self._checkBrightness(brightness)
+        self._sendColor();
+
+    def _checkBrightness(self, brightness):
+        if brightness < 0:
+            brightness = 0
+        if brightness > 1:
+            brightness = 1
+        return brightness
+
+    def getBrightness(self):
+        return self._brightness
