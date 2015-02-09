@@ -215,7 +215,7 @@ class Boblight:
         except EOFError:
             self._tn = None
             self.connect(self._host, self._port)
-            return False
+            return None
 
     def getHost(self):
         return self._host
