@@ -1,3 +1,4 @@
+import time
 from telnetlib import Telnet
 from string import split
 
@@ -169,6 +170,7 @@ class Boblight:
     def disconnect(self):
         if self._tn:
             self._tn.close()
+            self._tn = None
         else:
             raise Boblight.ConnectionError("There was no connection to disconnect from!")
         
@@ -202,12 +204,17 @@ class Boblight:
         return self._light
     
     def ping(self):
-        self._tn.write(self._PING)
-        p = self._tn.read_until(self._EOL)
-        
-        if p == "ping 1":
-            return True
-        else:
+        try:
+            self._tn.write(self._PING)
+            p = self._tn.read_until(self._EOL)
+
+            if p == "ping 1"+self._EOL:
+                return True
+            else:
+                return False
+        except EOFError:
+            self._tn = None
+            self.connect(self._host, self._port)
             return False
 
     def getHost(self):
