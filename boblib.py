@@ -1,6 +1,7 @@
 import time
 from telnetlib import Telnet
 from string import split
+from socket import error
 
 # class Color for use in class Light (each light has it's own color)
 class Color:
@@ -110,6 +111,8 @@ class Boblight:
     _priority   = int(254)
     _brightness = 1
     
+    _reconnect  = False
+    
     def __init__(self, host="", port=19333, priority=255):
         if host != "":
             self.connect(host, port)
@@ -128,7 +131,10 @@ class Boblight:
             self._tn.write(self._HELLO)
             self._tn.read_until(self._EOL)
             
-            self._getLightsFromServer()
+            if not self._reconnect:
+                self._getLightsFromServer()
+            
+            self._reconnect = False
     
     def _getLightsFromServer(self):
         self._tn.write(self._GETLIGHTS)
@@ -214,9 +220,23 @@ class Boblight:
             else:
                 return False
         except EOFError:
-            self._tn = None
-            self.connect(self._host, self._port)
+            self.reconnect()
+        except error, e:
+            self.reconnect()
             return None
+
+    def reconnect(self):
+        self._tn = None
+        self._reconnect = True
+        while self._reconnect:
+            try:
+                self.connect(self._host, self._port)
+            except error, e:
+                pass
+        self.setPriority(self._priority)
+        self._sendInterpolation()
+        self._sendSpeed()
+        self._sendColor()
 
     def getHost(self):
         return self._host
