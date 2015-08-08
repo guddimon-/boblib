@@ -112,11 +112,13 @@ class Boblight:
     _priority   = int(254)
     _brightness = 1
     
+    # helper attributes
     _timeout    = 1
     _reconnect  = False
     
-    def __init__(self, host="", port=19333, priority=255):
+    def __init__(self, host="", port=19333, priority=255, timeout=1):
         if host != "":
+            self._timeout=timeout
             self.connect(host, port)
             self.setPriority(priority)
         else:
@@ -131,13 +133,22 @@ class Boblight:
             try:
                 hi = ""
                 while hi == "":
+                    print "Open connection"
                     self._tn = Telnet(host, port)
+                    if self._tn:
+                        print "Opened connection"
+                    else:
+                        print "Open connection failed"
                     
+                    print "Say HELLO"
                     self._tn.write(self._HELLO)
                     hi = self._tn.read_until(self._EOL, self._timeout)
                     
                     if hi == "":
+                        print "HELLO failed, restart daemon"
                         self._restartBoblightDaemon()
+                    else:
+                        print "Server said HELLO"
                     
                 if not self._reconnect:
                     self._getLightsFromServer()
@@ -147,20 +158,27 @@ class Boblight:
                 print e
     
     def _getLightsFromServer(self):
+        print "Ask server for lights"
         self._tn.write(self._GETLIGHTS)
         lights = self._tn.read_until(self._EOL, self._timeout)
 
         size = int(lights.split(self._SPLITTER)[1])
+        print "Server has "+str(size)+" lights"
         
+        print "Get all the lights!"
         for i in range(0, size):
             light = self._tn.read_until(self._EOL, self._timeout)
             light_split = split(light, self._SPLITTER)
 
             self._light.append(Light(light_split[1], light_split[3], light_split[4], light_split[5], light_split[6]))
 
+        print "Lights are in memory now"
+
     def _sendPriority(self):
         self.ping()
+        print "Send priority"
         self._tn.write(self._SETPRIORITY.format(self._priority))
+        print "Send priority END"
         
     def setPriority(self, priority):
         self._priority = self._checkPriority(priority)
@@ -173,13 +191,39 @@ class Boblight:
             priority = 255
         return priority
     
-    def _sendColor(self):
+    def sendColor(self, light):
+        if light < 0 or light >= getlightscount():
+            print "bla"
+            return
+
         self.ping()
-        for l in self._light:
-            self._tn.write(self._SETLIGHTRGB.format(l.getName(), self._brightness * l.getColor().getRed(), self._brightness * l.getColor().getGreen(), self._brightness * l.getColor().getBlue()))
-            
+        print "Send color of light "+str(light)
+        self._tn.write(self._SETLIGHTRGB.format(_light[light].getName(),
+                                                self._brightness * _light[light].getColor().getRed(),
+                                                self._brightness * _light[light].getColor().getGreen(),
+                                                self._brightness * _light[light].getColor().getBlue()
+                                                )
+                       )
+        print "Send color of light "+str(light)+" END"
         self.sync()
         
+    def sendColorAll(self):
+        self._sendColor()
+    
+    def _sendColor(self):
+        self.ping()
+        print "Send all lights color"
+        for l in self._light:
+            self._tn.write(self._SETLIGHTRGB.format(l.getName(),
+                                                    self._brightness * l.getColor().getRed(),
+                                                    self._brightness * l.getColor().getGreen(),
+                                                    self._brightness * l.getColor().getBlue()
+                                                    )
+                           )
+            
+        print "Send all lights color END"
+        self.sync()
+    
     def setColor(self, red, green, blue):
         for l in self._light:
             l.getColor().setColor(red, green, blue)
@@ -189,15 +233,30 @@ class Boblight:
     def disconnect(self):
         self.ping()
         if self._tn:
+            print "Disconnect from server"
             self._tn.close()
             self._tn = None
+            print "Disconnected from server"
         else:
             raise Boblight.ConnectionError("There was no connection to disconnect from!")
         
+    def sendSpeed(self, light):
+        self.ping()
+        print "Send speed of light "+str(light)
+        self._tn.write(self._SETLIGHTSPEED.format(_light[light].getName(), _light[light].getSpeed()))
+
+        print "Send speed of light "+str(light)+" END"
+    
+    def sendSpeedAll(self):
+        self._sendSpeed()
+    
     def _sendSpeed(self):
         self.ping()
+        print "Send all lights speed"
         for l in self._light:
             self._tn.write(self._SETLIGHTSPEED.format(l.getName(), l.getSpeed()))
+
+        print "Send all lights speed END"
         
     def setSpeed(self, speed):
         for l in self._light:
@@ -211,13 +270,28 @@ class Boblight:
         
         self._sendInterpolation()
         
+    def sendInterpolation(self, light):
+        self.ping()
+        print "Send interpolation of light "+str(light)
+        self._tn.write(self._SETLIGHTINTERPOLATION.format(_light[light].getName(), _light[light].getInterpolation()))
+            
+        print "Send interpolation of light "+str(light)+" END"
+        
+    def sendInterpolationAll(self):
+        self._sendInterpolation()
+    
     def _sendInterpolation(self):
         self.ping()
+        print "Send all lights interpolation"
         for l in self._light:
             self._tn.write(self._SETLIGHTINTERPOLATION.format(l.getName(), l.getInterpolation()))
+            
+        print "Send all lights interpolation END"
         
     def sync(self):
+        print "Sync"
         self._tn.write(self._SYNC)
+        print "Sync END"
         
     def getLightsCount(self):
         return self._light.__len__()
@@ -227,28 +301,35 @@ class Boblight:
     
     def ping(self):
         try:
+            print "Ping the server"
             self._tn.write(self._PING)
             p = self._tn.read_until(self._EOL, self._timeout)
+            print "Pong from server: "+p
 
             if p == "ping 1"+self._EOL:
                 return True
-            else:
+            elif p == "ping 0"+self._EOL:
                 return False
+            else:
+                self.reconnect()
         except EOFError:
             self.reconnect()
         except error, e:
             print e
             self.reconnect()
-            return None
+
+        return None
 
     def reconnect(self):
-        self._tn = None
         self._reconnect = True
         while self._reconnect:
             try:
+                self._tn = None
+                print "Trying to reconnect to server"
                 self.connect(self._host, self._port)
             except error, e:
                 pass
+        print "Reconnect OK"
         self._sendPriority()
         self._sendInterpolation()
         self._sendSpeed()
@@ -278,4 +359,6 @@ class Boblight:
         return self._brightness
 
     def _restartBoblightDaemon(self):
+        print "Restart server"
         call("service boblightd restart", shell=True)
+        print "Restart server END"
