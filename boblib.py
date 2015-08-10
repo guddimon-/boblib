@@ -192,10 +192,6 @@ class Boblight:
         return priority
     
     def sendColor(self, light):
-        if light < 0 or light >= self.getlightscount():
-            print "Light out of range"
-            return
-
         self.ping()
         print "Send color of light "+str(light)
         self._tn.write(self._SETLIGHTRGB.format(_light[light].getName(),
