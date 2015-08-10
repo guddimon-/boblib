@@ -195,9 +195,9 @@ class Boblight:
         self.ping()
         print "Send color of light "+str(light)
         self._tn.write(self._SETLIGHTRGB.format(_light[light].getName(),
-                                                self._brightness * _light[light].getColor().getRed(),
-                                                self._brightness * _light[light].getColor().getGreen(),
-                                                self._brightness * _light[light].getColor().getBlue()
+                                                self._brightness * self._light[light].getColor().getRed(),
+                                                self._brightness * self._light[light].getColor().getGreen(),
+                                                self._brightness * self._light[light].getColor().getBlue()
                                                 )
                        )
         print "Send color of light "+str(light)+" END"
